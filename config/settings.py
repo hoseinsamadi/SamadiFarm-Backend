@@ -36,6 +36,8 @@ INSTALLED_APPS = [
     "corsheaders",
     # local apps
     "products",
+    "posts.apps.PostsConfig",
+    "reviews.apps.ReviewsConfig",
 ]
 
 MIDDLEWARE = [
