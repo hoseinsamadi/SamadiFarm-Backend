@@ -19,6 +19,8 @@ python manage.py runserver
 
 سرور روی `http://127.0.0.1:8000` بالا می‌آید.
 
+برای ورود با گوگل، مقادیر `GOOGLE_CLIENT_ID` و `GOOGLE_CLIENT_SECRET` را از OAuth Web Client در `.env` قرار دهید. مقدار `GOOGLE_REDIRECT_URI` باید دقیقاً با یکی از Authorized redirect URIهای Google Cloud یکسان باشد؛ مقدار پیش‌فرض این پروژه `http://127.0.0.1:8000/api/auth/google/callback/` است.
+
 ## افزودن / حذف محصول
 
 ### روش ۱ — پنل ادمین (ساده‌ترین راه)

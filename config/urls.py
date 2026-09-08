@@ -3,11 +3,17 @@ from django.conf.urls.static import static
 from django.contrib import admin
 from django.urls import include, path
 
+from .auth_views import current_user, google_callback, google_start, logout_user
+
 urlpatterns = [
     path("admin/", admin.site.urls),
     path("api/", include("products.urls")),
     path("api/", include("posts.urls")),
     path("api/", include("reviews.urls")),
+    path("api/auth/google/", google_start, name="google-start"),
+    path("api/auth/google/callback/", google_callback, name="google-callback"),
+    path("api/auth/me", current_user, name="current-user"),
+    path("api/auth/logout", logout_user, name="logout-user"),
 ]
 
 if settings.DEBUG:
