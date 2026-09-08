@@ -34,6 +34,12 @@ FRONTEND_URL = os.environ.get("FRONTEND_URL", "http://localhost:3000")
 GOOGLE_CLIENT_ID = os.environ.get("GOOGLE_CLIENT_ID", "")
 GOOGLE_CLIENT_SECRET = os.environ.get("GOOGLE_CLIENT_SECRET", "")
 GOOGLE_REDIRECT_URI = os.environ.get("GOOGLE_REDIRECT_URI", "http://localhost:8000/api/auth/google/callback/")
+SMS_IR_API_KEY = os.environ.get("SMS_IR_API_KEY", "")
+SMS_IR_TEMPLATE_ID = os.environ.get("SMS_IR_TEMPLATE_ID", "")
+SMS_IR_VERIFY_URL = os.environ.get("SMS_IR_VERIFY_URL", "https://api.sms.ir/v1/send/verify")
+OTP_TTL_SECONDS = 120
+SMS_IR_SANDBOX = os.environ.get("SMS_IR_SANDBOX", "False").lower() == "true"
+SMS_IR_TEST_CODE = os.environ.get("SMS_IR_TEST_CODE", "12345")
 
 
 # Application definition

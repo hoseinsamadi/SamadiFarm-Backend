@@ -10,6 +10,7 @@ from django.http import JsonResponse
 from django.shortcuts import redirect
 from django.urls import reverse
 from django.views.decorators.http import require_GET, require_POST
+from django.views.decorators.csrf import csrf_exempt
 
 
 def _frontend_url(path):
@@ -108,6 +109,7 @@ def current_user(request):
     })
 
 
+@csrf_exempt
 @require_POST
 def logout_user(request):
     logout(request)
