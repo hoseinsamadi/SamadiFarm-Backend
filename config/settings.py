@@ -40,6 +40,11 @@ SMS_IR_VERIFY_URL = os.environ.get("SMS_IR_VERIFY_URL", "https://api.sms.ir/v1/s
 OTP_TTL_SECONDS = 120
 SMS_IR_SANDBOX = os.environ.get("SMS_IR_SANDBOX", "False").lower() == "true"
 SMS_IR_TEST_CODE = os.environ.get("SMS_IR_TEST_CODE", "12345")
+CRYPTO_NETWORK = os.environ.get("CRYPTO_NETWORK", "Ethereum (ERC20)")
+CRYPTO_SYMBOL = os.environ.get("CRYPTO_SYMBOL", "USDT")
+CRYPTO_WALLET_ADDRESS = os.environ.get("CRYPTO_WALLET_ADDRESS", "")
+CRYPTO_USDT_CONTRACT = os.environ.get("CRYPTO_USDT_CONTRACT", "")
+CRYPTO_USDT_RATE_TOMAN = os.environ.get("CRYPTO_USDT_RATE_TOMAN", "229000")
 
 
 # Application definition
@@ -58,6 +63,7 @@ INSTALLED_APPS = [
     "products",
     "posts.apps.PostsConfig",
     "reviews.apps.ReviewsConfig",
+    "payments.apps.PaymentsConfig",
 ]
 
 MIDDLEWARE = [

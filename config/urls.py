@@ -4,7 +4,9 @@ from django.contrib import admin
 from django.urls import include, path
 
 from .auth_views import current_user, google_callback, google_start, login_user, logout_user, update_profile
+from .crypto_views import crypto_info, crypto_quote
 from .otp_views import send_otp, verify_otp
+from payments.views import my_orders, submit_crypto_transaction
 
 urlpatterns = [
     path("admin/", admin.site.urls),
@@ -19,6 +21,10 @@ urlpatterns = [
     path("api/auth/logout", logout_user, name="logout-user"),
     path("api/auth/send-otp", send_otp, name="send-otp"),
     path("api/auth/verify-otp", verify_otp, name="verify-otp"),
+    path("api/payments/crypto/info", crypto_info, name="crypto-info"),
+    path("api/payments/crypto/quote", crypto_quote, name="crypto-quote"),
+    path("api/payments/crypto/transactions", submit_crypto_transaction, name="submit-crypto-transaction"),
+    path("api/payments/my-orders", my_orders, name="my-orders"),
 ]
 
 if settings.DEBUG:
