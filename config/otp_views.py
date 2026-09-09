@@ -75,18 +75,23 @@ def send_otp(request):
         return JsonResponse({"detail": "شماره موبایل معتبر نیست."}, status=400)
 
     code = settings.SMS_IR_TEST_CODE if settings.SMS_IR_SANDBOX else str(secrets.randbelow(90000) + 10000)
+    provider_warning = ""
     try:
         _send_sms(phone, code)
     except RuntimeError as error:
-        return JsonResponse({"detail": str(error)}, status=503)
+        if not settings.SMS_IR_SANDBOX or "قالب یافت نشد" not in str(error):
+            return JsonResponse({"detail": str(error)}, status=503)
+        provider_warning = str(error)
 
     request.session["otp_phone"] = phone
     request.session["otp_hash"] = hashlib.sha256(code.encode()).hexdigest()
     request.session["otp_expires_at"] = int(time.time()) + settings.OTP_TTL_SECONDS
     request.session.modified = True
-    response = {"ok": True, "message": "کد تأیید ارسال شد."}
+    response = {"ok": True, "message": "کد تأیید Sandbox آماده است."}
     if settings.SMS_IR_SANDBOX:
         response["sandbox_code"] = code
+        if provider_warning:
+            response["provider_warning"] = provider_warning
     return JsonResponse(response)
 
 
