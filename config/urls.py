@@ -3,7 +3,7 @@ from django.conf.urls.static import static
 from django.contrib import admin
 from django.urls import include, path
 
-from .auth_views import current_user, google_callback, google_start, logout_user
+from .auth_views import current_user, google_callback, google_start, login_user, logout_user, update_profile
 from .otp_views import send_otp, verify_otp
 
 urlpatterns = [
@@ -14,6 +14,8 @@ urlpatterns = [
     path("api/auth/google/", google_start, name="google-start"),
     path("api/auth/google/callback/", google_callback, name="google-callback"),
     path("api/auth/me", current_user, name="current-user"),
+    path("api/auth/profile", update_profile, name="update-profile"),
+    path("api/auth/login", login_user, name="login-user"),
     path("api/auth/logout", logout_user, name="logout-user"),
     path("api/auth/send-otp", send_otp, name="send-otp"),
     path("api/auth/verify-otp", verify_otp, name="verify-otp"),

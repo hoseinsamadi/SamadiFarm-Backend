@@ -105,8 +105,81 @@ def current_user(request):
         "first_name": request.user.first_name,
         "last_name": request.user.last_name,
         "email": request.user.email or None,
-        "phone": getattr(request.user, "phone", None),
+        "phone": request.user.username if request.user.username.startswith("09") else None,
     })
+
+
+@csrf_exempt
+@require_POST
+def update_profile(request):
+    if not request.user.is_authenticated:
+        return JsonResponse({"detail": "Authentication required."}, status=401)
+    try:
+        body = json.loads(request.body or "{}")
+    except json.JSONDecodeError:
+        body = {}
+
+    first_name = str(body.get("first_name") or "").strip()
+    last_name = str(body.get("last_name") or "").strip()
+    phone = str(body.get("phone") or "").strip()
+    password = str(body.get("password") or "")
+    if len(first_name) < 2 or len(last_name) < 2:
+        return JsonResponse({"detail": "نام و نام خانوادگی را کامل وارد کنید."}, status=400)
+
+    current_phone = request.user.username if request.user.username.startswith("09") else ""
+    if current_phone and phone and phone != current_phone:
+        return JsonResponse({"detail": "شماره موبایل واردشده قابل تغییر نیست."}, status=400)
+    if phone:
+        from .otp_views import normalize_phone
+        phone = normalize_phone(phone)
+        if len(phone) != 11 or not phone.startswith("09"):
+            return JsonResponse({"detail": "شماره موبایل معتبر نیست."}, status=400)
+        if not current_phone:
+            User = get_user_model()
+            if User.objects.exclude(pk=request.user.pk).filter(username=phone).exists():
+                return JsonResponse({"detail": "این شماره قبلاً برای حساب دیگری ثبت شده است."}, status=400)
+            request.user.username = phone
+
+    request.user.first_name = first_name
+    request.user.last_name = last_name
+    if password:
+        if len(password) < 6:
+            return JsonResponse({"detail": "رمز ثابت باید حداقل ۶ کاراکتر باشد."}, status=400)
+        request.user.set_password(password)
+    request.user.save()
+    if password:
+        login(request, request.user)
+    return JsonResponse({
+        "ok": True,
+        "user": {
+            "id": request.user.id,
+            "name": request.user.get_full_name() or request.user.username,
+            "first_name": request.user.first_name,
+            "last_name": request.user.last_name,
+            "email": request.user.email or None,
+            "phone": request.user.username if request.user.username.startswith("09") else None,
+        },
+    })
+
+
+@csrf_exempt
+@require_POST
+def login_user(request):
+    try:
+        body = json.loads(request.body or "{}")
+    except json.JSONDecodeError:
+        body = {}
+    from .otp_views import normalize_phone
+    phone = normalize_phone(body.get("phone"))
+    password = str(body.get("password") or "")
+    if len(phone) != 11 or not phone.startswith("09") or not password:
+        return JsonResponse({"detail": "شماره موبایل و رمز عبور را وارد کنید."}, status=400)
+    User = get_user_model()
+    user = User.objects.filter(username=phone).first()
+    if user is None or not user.check_password(password):
+        return JsonResponse({"detail": "شماره موبایل یا رمز عبور صحیح نیست."}, status=401)
+    login(request, user)
+    return JsonResponse({"ok": True})
 
 
 @csrf_exempt
