@@ -31,6 +31,7 @@ ALLOWED_HOSTS = [
 ]
 
 FRONTEND_URL = os.environ.get("FRONTEND_URL", "http://localhost:3000")
+BACKEND_URL = os.environ.get("BACKEND_URL", "http://localhost:8000").rstrip("/")
 GOOGLE_CLIENT_ID = os.environ.get("GOOGLE_CLIENT_ID", "")
 GOOGLE_CLIENT_SECRET = os.environ.get("GOOGLE_CLIENT_SECRET", "")
 GOOGLE_REDIRECT_URI = os.environ.get("GOOGLE_REDIRECT_URI", "http://localhost:8000/api/auth/google/callback/")
@@ -45,6 +46,13 @@ CRYPTO_SYMBOL = os.environ.get("CRYPTO_SYMBOL", "USDT")
 CRYPTO_WALLET_ADDRESS = os.environ.get("CRYPTO_WALLET_ADDRESS", "")
 CRYPTO_USDT_CONTRACT = os.environ.get("CRYPTO_USDT_CONTRACT", "")
 CRYPTO_USDT_RATE_TOMAN = os.environ.get("CRYPTO_USDT_RATE_TOMAN", "229000")
+ZARINPAL_MERCHANT_ID = os.environ.get("ZARINPAL_MERCHANT_ID", "")
+ZARINPAL_REQUEST_URL = "https://payment.zarinpal.com/pg/v4/payment/request.json"
+ZARINPAL_VERIFY_URL = "https://payment.zarinpal.com/pg/v4/payment/verify.json"
+ZARINPAL_START_PAY_URL = "https://payment.zarinpal.com/pg/StartPay/"
+ZARINPAL_CALLBACK_URL = os.environ.get(
+    "ZARINPAL_CALLBACK_URL", f"{BACKEND_URL}/api/payments/zarinpal/callback"
+)
 
 
 # Application definition
