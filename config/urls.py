@@ -6,7 +6,7 @@ from django.urls import include, path
 from .auth_views import current_user, google_callback, google_start, login_user, logout_user, update_profile
 from .crypto_views import crypto_info, crypto_quote
 from .otp_views import send_otp, verify_otp
-from payments.views import my_orders, submit_crypto_transaction, zarinpal_callback, zarinpal_create
+from payments.views import my_orders, payment_methods, submit_card_to_card_transaction, submit_crypto_transaction, zarinpal_callback, zarinpal_create
 
 urlpatterns = [
     path("admin/", admin.site.urls),
@@ -24,6 +24,8 @@ urlpatterns = [
     path("api/payments/crypto/info", crypto_info, name="crypto-info"),
     path("api/payments/crypto/quote", crypto_quote, name="crypto-quote"),
     path("api/payments/crypto/transactions", submit_crypto_transaction, name="submit-crypto-transaction"),
+    path("api/payments/card-to-card/transactions", submit_card_to_card_transaction, name="submit-card-to-card-transaction"),
+    path("api/payments/methods", payment_methods, name="payment-methods"),
     path("api/payments/zarinpal/create", zarinpal_create, name="zarinpal-create"),
     path("api/payments/zarinpal/callback", zarinpal_callback, name="zarinpal-callback"),
     path("api/payments/my-orders", my_orders, name="my-orders"),

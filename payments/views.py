@@ -13,7 +13,27 @@ from django.views.decorators.http import require_GET, require_POST
 
 from products.models import Product
 
-from .models import PaymentTransaction
+from .models import PaymentGatewaySettings, PaymentTransaction
+
+
+def _gateway_settings():
+    return PaymentGatewaySettings.current()
+
+
+@require_GET
+def payment_methods(request):
+    gateways = _gateway_settings()
+    return JsonResponse({
+        "methods": {
+            "zarinpal": gateways.zarinpal_enabled,
+            "crypto": gateways.crypto_enabled,
+            "card_to_card": gateways.card_to_card_enabled,
+        },
+        "card_to_card": {
+            "card_number": gateways.card_number,
+            "card_holder_name": gateways.card_holder_name,
+        },
+    })
 
 
 def _zarinpal_post(url, payload):
@@ -74,13 +94,15 @@ def _validated_order_items(raw_items):
 @login_required
 @require_POST
 def submit_crypto_transaction(request):
+    if not _gateway_settings().crypto_enabled:
+        return JsonResponse({"detail": "پرداخت کریپتو در حال حاضر غیرفعال است."}, status=503)
     try:
         payload = json.loads(request.body or "{}")
     except json.JSONDecodeError:
         return JsonResponse({"detail": "بدنه درخواست معتبر نیست."}, status=400)
 
     try:
-        amount_toman = Decimal(str(payload.get("amount_toman", 0)))
+        items, amount_toman = _validated_order_items(payload.get("items"))
         rate_toman = Decimal(settings.CRYPTO_USDT_RATE_TOMAN)
         amount = (amount_toman / rate_toman).quantize(Decimal("0.000001"))
     except (InvalidOperation, TypeError, ValueError):
@@ -101,7 +123,7 @@ def submit_crypto_transaction(request):
         transaction_hash=str(payload.get("transaction_hash", "")).strip(),
         network=settings.CRYPTO_NETWORK,
         wallet_address=settings.CRYPTO_WALLET_ADDRESS,
-        items=payload.get("items", []),
+        items=items,
         shipping_address=payload.get("shipping_address", {}),
     )
     return JsonResponse({"ok": True, "transaction_id": transaction.pk, "status": transaction.status}, status=201)
@@ -111,6 +133,8 @@ def submit_crypto_transaction(request):
 @login_required
 @require_POST
 def zarinpal_create(request):
+    if not _gateway_settings().zarinpal_enabled:
+        return JsonResponse({"detail": "درگاه زرین‌پال در حال حاضر غیرفعال است."}, status=503)
     if not settings.ZARINPAL_MERCHANT_ID:
         return JsonResponse({"detail": "شناسهٔ پذیرندهٔ زرین‌پال در تنظیمات سرور وارد نشده است."}, status=503)
 
@@ -168,6 +192,46 @@ def zarinpal_create(request):
     }, status=201)
 
 
+@csrf_exempt
+@login_required
+@require_POST
+def submit_card_to_card_transaction(request):
+    if not _gateway_settings().card_to_card_enabled:
+        return JsonResponse({"detail": "پرداخت کارت به کارت در حال حاضر غیرفعال است."}, status=503)
+    try:
+        payload = json.loads(request.body or "{}")
+        items, amount = _validated_order_items(payload.get("items"))
+    except (json.JSONDecodeError, ValueError) as error:
+        return JsonResponse({"detail": str(error)}, status=400)
+
+    tracking_code = str(payload.get("tracking_code", "")).strip()
+    if not 6 <= len(tracking_code) <= 180:
+        return JsonResponse({"detail": "کد رهگیری بانکی باید بین ۶ تا ۱۸۰ کاراکتر باشد."}, status=400)
+
+    user = request.user
+    gateway = _gateway_settings()
+    transaction = PaymentTransaction.objects.create(
+        user=user,
+        customer_name=user.get_full_name(),
+        customer_email=user.email,
+        customer_phone=user.username if user.username.startswith("09") else "",
+        amount=amount,
+        currency="IRT",
+        method=PaymentTransaction.Method.CARD_TO_CARD,
+        transaction_hash=tracking_code,
+        wallet_address=gateway.card_number,
+        items=items,
+        shipping_address=payload.get("shipping_address", {}),
+        note="کارت به کارت؛ در انتظار بررسی و تأیید مدیر.",
+    )
+    return JsonResponse({
+        "ok": True,
+        "transaction_id": transaction.pk,
+        "order_reference": transaction.order_reference,
+        "status": transaction.status,
+    }, status=201)
+
+
 @require_GET
 def zarinpal_callback(request):
     authority = request.GET.get("Authority", "").strip()
@@ -213,6 +277,7 @@ def my_orders(request):
         "orders": [
             {
                 "id": transaction.id,
+                "order_reference": transaction.order_reference,
                 "amount": str(transaction.amount),
                 "currency": transaction.currency,
                 "payment_status": transaction.status,

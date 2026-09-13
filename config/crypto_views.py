@@ -3,11 +3,14 @@ from decimal import Decimal, InvalidOperation
 from django.conf import settings
 from django.http import JsonResponse
 from django.views.decorators.http import require_GET
+from payments.models import PaymentGatewaySettings
 
 
 @require_GET
 def crypto_info(request):
     """Return the public receiving details used by the checkout UI."""
+    if not PaymentGatewaySettings.current().crypto_enabled:
+        return JsonResponse({"detail": "پرداخت کریپتو در حال حاضر غیرفعال است."}, status=503)
     return JsonResponse(
         {
             "network": settings.CRYPTO_NETWORK,
@@ -20,6 +23,8 @@ def crypto_info(request):
 
 @require_GET
 def crypto_quote(request):
+    if not PaymentGatewaySettings.current().crypto_enabled:
+        return JsonResponse({"detail": "پرداخت کریپتو در حال حاضر غیرفعال است."}, status=503)
     try:
         amount_toman = Decimal(request.GET.get("amount_toman", "0"))
         rate_toman = Decimal(settings.CRYPTO_USDT_RATE_TOMAN)
