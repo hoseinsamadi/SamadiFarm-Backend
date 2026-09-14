@@ -31,6 +31,8 @@ ALLOWED_HOSTS = [
 ]
 
 FRONTEND_URL = os.environ.get("FRONTEND_URL", "http://localhost:3000")
+BACKEND_URL = os.environ.get("BACKEND_URL", "http://localhost:8000").rstrip("/")
+ADMIN_URL = os.environ.get("ADMIN_URL", "admin").strip("/") or "admin"
 GOOGLE_CLIENT_ID = os.environ.get("GOOGLE_CLIENT_ID", "")
 GOOGLE_CLIENT_SECRET = os.environ.get("GOOGLE_CLIENT_SECRET", "")
 GOOGLE_REDIRECT_URI = os.environ.get("GOOGLE_REDIRECT_URI", "http://localhost:8000/api/auth/google/callback/")
@@ -45,6 +47,13 @@ CRYPTO_SYMBOL = os.environ.get("CRYPTO_SYMBOL", "USDT")
 CRYPTO_WALLET_ADDRESS = os.environ.get("CRYPTO_WALLET_ADDRESS", "")
 CRYPTO_USDT_CONTRACT = os.environ.get("CRYPTO_USDT_CONTRACT", "")
 CRYPTO_USDT_RATE_TOMAN = os.environ.get("CRYPTO_USDT_RATE_TOMAN", "229000")
+ZARINPAL_MERCHANT_ID = os.environ.get("ZARINPAL_MERCHANT_ID", "")
+ZARINPAL_REQUEST_URL = "https://sandbox.zarinpal.com/pg/v4/payment/request.json"
+ZARINPAL_VERIFY_URL = "https://sandbox.zarinpal.com/pg/v4/payment/verify.json"
+ZARINPAL_START_PAY_URL = "https://sandbox.zarinpal.com/pg/StartPay/"
+ZARINPAL_CALLBACK_URL = os.environ.get(
+    "ZARINPAL_CALLBACK_URL", f"{BACKEND_URL}/api/payments/zarinpal/callback"
+)
 
 
 # Application definition
@@ -104,9 +113,18 @@ WSGI_APPLICATION = "config.wsgi.application"
 DATABASES = {
     "default": {
         "ENGINE": "django.db.backends.sqlite3",
-        "NAME": BASE_DIR / "db.sqlite3",
+        "NAME": os.environ.get("DJANGO_DATABASE_PATH", BASE_DIR / "db.sqlite3"),
     }
 }
+
+# Production containers provide DATABASE_URL and use PostgreSQL. SQLite remains
+# available for local development when DATABASE_URL is not configured.
+if os.environ.get("DATABASE_URL"):
+    import dj_database_url
+
+    DATABASES["default"] = dj_database_url.parse(
+        os.environ["DATABASE_URL"], conn_max_age=600, conn_health_checks=True
+    )
 
 
 # Password validation
@@ -130,7 +148,7 @@ STATIC_URL = "static/"
 STATIC_ROOT = BASE_DIR / "staticfiles"
 
 MEDIA_URL = "media/"
-MEDIA_ROOT = BASE_DIR / "media"
+MEDIA_ROOT = Path(os.environ.get("DJANGO_MEDIA_ROOT", BASE_DIR / "media"))
 
 DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
 

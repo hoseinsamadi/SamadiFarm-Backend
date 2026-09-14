@@ -12,6 +12,7 @@ class PaymentTransaction(models.Model):
     class Method(models.TextChoices):
         CRYPTO = "crypto", "کریپتو"
         ZARINPAL = "zarinpal", "زرین‌پال"
+        CARD_TO_CARD = "card_to_card", "کارت به کارت"
 
     class OrderStatus(models.TextChoices):
         AWAITING_CONFIRMATION = "awaiting_confirmation", "در انتظار تأیید"
@@ -47,3 +48,30 @@ class PaymentTransaction(models.Model):
 
     def __str__(self):
         return f"#{self.pk} - {self.customer_name or self.customer_email or 'کاربر مهمان'} - {self.amount} {self.currency}"
+
+    @property
+    def order_reference(self):
+        """A short, shareable tracking code for the customer."""
+        return f"SF-{self.pk:06d}"
+
+
+class PaymentGatewaySettings(models.Model):
+    """Single editable payment configuration shown in Django admin."""
+
+    zarinpal_enabled = models.BooleanField("فعال بودن زرین‌پال", default=True)
+    crypto_enabled = models.BooleanField("فعال بودن کریپتو", default=True)
+    card_to_card_enabled = models.BooleanField("فعال بودن کارت به کارت", default=True)
+    card_number = models.CharField("شماره کارت مقصد", max_length=19, default="6219861475791009")
+    card_holder_name = models.CharField("نام صاحب کارت", max_length=120, blank=True)
+
+    class Meta:
+        verbose_name = "تنظیمات درگاه‌های پرداخت"
+        verbose_name_plural = "تنظیمات درگاه‌های پرداخت"
+
+    def __str__(self):
+        return "تنظیمات درگاه‌های پرداخت"
+
+    @classmethod
+    def current(cls):
+        settings, _ = cls.objects.get_or_create(pk=1)
+        return settings

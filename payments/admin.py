@@ -2,7 +2,18 @@ from django.contrib import admin
 from django.db.models import Sum
 from django.utils import timezone
 
-from .models import PaymentTransaction
+from .models import PaymentGatewaySettings, PaymentTransaction
+
+
+@admin.register(PaymentGatewaySettings)
+class PaymentGatewaySettingsAdmin(admin.ModelAdmin):
+    fields = ("zarinpal_enabled", "crypto_enabled", "card_to_card_enabled", "card_number", "card_holder_name")
+
+    def has_add_permission(self, request):
+        return not PaymentGatewaySettings.objects.exists()
+
+    def has_delete_permission(self, request, obj=None):
+        return False
 
 
 @admin.register(PaymentTransaction)

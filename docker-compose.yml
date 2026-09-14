@@ -1,0 +1,48 @@
+services:
+  samadi-farm:
+    build:
+      context: ..
+      dockerfile: samadi-farm-backend/deployment/Dockerfile
+      args:
+        # In production set this to https://api.your-domain.ir before building.
+        NEXT_PUBLIC_API_URL: ${NEXT_PUBLIC_API_URL:-http://localhost:8000}
+    env_file:
+      - .env
+    environment:
+      DJANGO_DEBUG: "False"
+      DJANGO_MEDIA_ROOT: /data/media
+      DATABASE_URL: postgresql://samadi_farm:${POSTGRES_PASSWORD:-change-this-before-deploy}@postgres:5432/samadi_farm
+      DOMAIN: ${DOMAIN:-localhost}
+      ADMIN_URL: ${ADMIN_URL:-admin}
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - samadi_farm_media:/data
+      - caddy_data:/data/caddy
+      - caddy_config:/config/caddy
+    depends_on:
+      postgres:
+        condition: service_healthy
+    restart: unless-stopped
+
+  postgres:
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_DB: samadi_farm
+      POSTGRES_USER: samadi_farm
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-change-this-before-deploy}
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U samadi_farm -d samadi_farm"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    restart: unless-stopped
+
+volumes:
+  samadi_farm_media:
+  postgres_data:
+  caddy_data:
+  caddy_config:
