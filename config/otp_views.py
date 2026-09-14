@@ -41,7 +41,7 @@ def _send_sms(phone, code):
         data=payload,
         headers={
             "Content-Type": "application/json",
-            "Accept": "text/plain",
+            "Accept": "application/json",
             "x-api-key": settings.SMS_IR_API_KEY,
         },
     )

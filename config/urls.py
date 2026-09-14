@@ -9,7 +9,7 @@ from .otp_views import send_otp, verify_otp
 from payments.views import my_orders, payment_methods, submit_card_to_card_transaction, submit_crypto_transaction, zarinpal_callback, zarinpal_create
 
 urlpatterns = [
-    path("admin/", admin.site.urls),
+    path(f"{getattr(settings, 'ADMIN_URL', 'admin')}/", admin.site.urls),
     path("api/", include("products.urls")),
     path("api/", include("posts.urls")),
     path("api/", include("reviews.urls")),
